@@ -14,7 +14,6 @@ from lightning.pytorch.callbacks import LearningRateMonitor
 from utils.network.models import Network
 
 from utils.data import load_data
-
 from utils.general import create_folder
 
 def run(params):

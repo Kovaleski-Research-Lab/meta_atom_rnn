@@ -40,10 +40,21 @@ def get_preds(data, model):
         all_results["truths"].append(labels)
         all_results["preds"].append(preds)
 
+    """
+    1. convert to numpy array and use np.stack
+    2. loop through the first dimension, take the sum.
+    2a. double for loop: make an empy list,
+        for tensor in tensors:
+            for ele in tensor:
+                new_list.append(ele)
+        torch.stack() # might need to do torch.numpy and numpy stack, then convert back to tensor
+    3. charlieGPT
+    """
+
     all_results["truths"] = torch.stack(all_results["truths"])
     all_results["preds"] = torch.stack(all_results["preds"])
 
-    # n is a result of stacking in line 39,40
+    # n is a result of stacking in line 39,40 (num observations in dataset?)
     n, b, s, c, h, w = all_results["truths"].size()
 
     all_results["truths"] = all_results["truths"].view(n * b, s, c, h, w)

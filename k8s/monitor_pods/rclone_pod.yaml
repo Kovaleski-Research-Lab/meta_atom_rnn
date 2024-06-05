@@ -1,46 +1,42 @@
-# I never actually used this pod - It's still in development. Following the example
-# at https://github.com/MU-HPDI/nautilus/blob/main/kube/cloudstorage/rclone_pod.yml
-# you should be able to add some args that will transfer the analysis results to
-# an S3 bucket.
 
-# Also, I don't think you need to make it interactive, but just in case you want to:
-# kubectl apply -f rclone_pod.yaml
-# kubectl exec -it rclone-monitor -- /bin/bash
-
-apiVersion: v1
-kind: Pod
+apiVersion: batch/v1
+kind: Job           
 metadata:
-  name: rclone-monitor
+  name: rclone-copy
 spec:
-  containers:
-    - name: raw-data-monitor
-      image: rclone/rclone 
-      stdin: True
-      tty: True
-      command: ["bash"]
-      #command: ["/bin/sh", "-c", "sleep", "infinity"]
-      env:
-        - name: RCLONE_CONFIG_NAUTILUS_TYPE
-          value: s3
-        - name: RCLONE_CONFIG_NAUTILUS_ENDPOINT
-          value: http://rook-ceph-rgw-centrals3.rook-central
-        - name: RCLONE_CONFIG_NAUTILUS_PROVIDER
-          value: Other
-        - name: RCLONE_CONFIG_NAUTILUS_ACCESS_KEY_ID
-          value: {your_id_here} 
-        - name: RCLONE_CONFIG_NAUTILUS_SECRET_ACCESS_KEY
-          value: {your_secret_key_here} 
-      resources:
-        limits:
-          memory: 4Gi
-          cpu: 2
-        requests:
-          memory: 4Gi
-          cpu: 2
-      volumeMounts:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: rclone-copy
+          image: rclone/rclone 
+          workingDir: /develop/results
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RCLONE_CONFIG_NAUTILUS_TYPE
+              value: s3
+            - name: RCLONE_CONFIG_NAUTILUS_ENDPOINT
+              value: http://rook-ceph-rgw-centrals3.rook-central
+            - name: RCLONE_CONFIG_NAUTILUS_PROVIDER
+              value: Other
+            - name: RCLONE_CONFIG_NAUTILUS_ACCESS_KEY_ID
+              value: JPKIHDAZY41Q5IPG1SPM
+            - name: RCLONE_CONFIG_NAUTILUS_SECRET_ACCESS_KEY
+              value: 2AZNOB1ivWEGKV1UYK6HDb5KuEJJ0s5dxDBxQPEE 
+          command:
+            [ "rclone", "copy", "--progress", "--copy-links", "--transfers=16",
+              "/develop/results/analysis/all_analysis", "nautilus:andys-bucket/all_analysis", ]
+          resources:
+            limits:
+              memory: 8Gi
+              cpu: 16
+            requests:
+              memory: 8Gi
+              cpu: 16
+          volumeMounts:
+            - name: training-results
+              mountPath: /develop/results
+      volumes:
         - name: training-results
-          mountPath: /develop/results/analysis
-  volumes:
-    - name: training-results
-      persistentVolumeClaim:
-        claimName: training-results
+          persistentVolumeClaim:
+            claimName: training-results
