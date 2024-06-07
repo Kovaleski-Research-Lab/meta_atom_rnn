@@ -22,7 +22,7 @@ The PVCs can be found by logging on to any machine with kubernetes installed and
 
 - `k8s` : contains files for data preprocessing, network training, loading results, and evaluation via kubernetes.
   - This folder contains multiple scripts for launching kubernetes jobs.
-- `configs` contains the configuration file for the entire pipeline, including a flag `deployment_mode` which gives the user the option to develop locally with a limited dataset, or in the cloud with the full dataset.
+- `configs` contains the configuration file for the entire pipeline, including a flag `deployment_mode` which gives the user the option to develop locally (on Marge) with a limited dataset, or in the cloud with the full dataset.
 - `preprocess_data` contains a script that takes in volumes of DFT electric field data from meep simulations and conditions them for the time series networks here.
 - `main.py` is the script we run for all processes if we are developing locally. If we're training locally, `train.sh` automates the experiments.
   - Run `main.py -config configs/params.yaml`. Make sure configs/params.yaml is correct for your preferred deployment_mode and experiment, as well as network training parameters, paths, etc.
