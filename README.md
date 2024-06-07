@@ -30,15 +30,29 @@ The PVCs can be found by logging on to any machine with kubernetes installed and
 
 ## How to run this code
 
-#### Prerequisites:
+### Prerequisites:
 1. [Kubernetes](https://github.com/Kovaleski-Research-Lab/Global-Lab-Repo/blob/main/sops/software_development/kubernetes.md) must be installed if using Nautilus resources.
 2. Must be running the appropriate docker container for [local deployment](https://hub.docker.com/layers/kovaleskilab/meep/v3_lightning/images/sha256-e550d12e2c85e095e8fd734eedba7104e9561e86e73aac545614323fda93efb2?context=repo) or [kubernetes deployment](https://hub.docker.com/layers/kovaleskilab/meep_ml/launcher/images/sha256-464ec5f4310603229e96b5beae9355055e2fb2de2027539c3d6bef94b7b5a4f1?context=repo)
+3. Your docker container for local deployment should be mounted as follows (data is mounted to agkgd4 - code and results should be unique to you):
+   ```
+   -v /home/{your_pawprint}/Documents/code:/develop/code \
+   -v /home/agkgd4/Documents/data:/develop/data \
+   -v /home/{your_pawprint}/Documents/results:/develop/results \
+   ```
+4. Your docker container for kubernetes deployment should be mounted as follows:
+   ```
+   -v /home/{your_pawprint}/Documents/code:/develop/code \
+   -v /home/agkgd4/Documents/data:/develop/data \
+   -v /home/{your_pawprint}/Documents/results:/develop/results \
+   -v ~/.kube:/root/.kube kovaleskilab/meep_ml:launcher
+   ```
+   
   - Note: You may prefer a conda environment instead of a docker container for launching Kubernetes jobs. A barebones environment should have jinja2 installed (not necessary to install kubernetes in the conda environment if you used snap install per the Kubernetes link in item 1.
   - Note: The dataset subset is located on Marge and Kubernetes is already installed.
 
-#### Running the code
+### Running the code
 
-##### Option 1: Running locally:
+#### Option 1: Running locally:
 - Note: The storage required for the complete dataset is upwards of 10 TB, so it is stored in a PVC on the Nautilus cluster and requires use of Kubernetes. To run locally, we use a subset of 100 samples, as described above in the Dataset section.
 
 **Step 1** Preprocessing the data (This assumes you have generated the raw data via [general_3x3](https://github.com/Kovaleski-Research-Lab/general_3x3/tree/andy_branch), and the raw data has been reduced to volumes via [repo here].)
@@ -67,4 +81,80 @@ The PVCs can be found by logging on to any machine with kubernetes installed and
      ```
      train.sh
      ```
-    
+**Step 3** Load model results
+
+  1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
+     
+  - deployment_mode : 0
+  - experiment : 2
+
+  2. Load all the results by running
+     ```
+     python3 main.py -config configs/params.yaml
+     ```
+
+**Step 4** Run evaluation
+
+  1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
+     
+  - deployment_mode : 0
+  - experiment : 3
+
+  2. Run the evaluation by running
+     ```
+     python3 main.py -config configs/params.yaml
+     ```
+     This will output loss plots, as well quantitative and qualitative metrics showing model performance. These files will be output into a folder, `/develop/results/meta_atom_rnn/analysis`
+
+#### Option 1: Scale up, launch Kubernetes jobs:
+
+**Step 1** Preprocessing the data (This assumes you have generated the raw data via [general_3x3](https://github.com/Kovaleski-Research-Lab/general_3x3/tree/andy_branch), and the raw data has been reduced to volumes via [repo here].)
+  
+  1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
+     
+  - deployment_mode : 1
+  - experiment : 0
+ 
+  2. From your (launch kube) Docker container, navigate to `/develop/code/meta_atom_rnn/k8s` and run
+     ```
+     python3 launch_preprocess.py -config ../configs/params.yaml
+     ```
+**Step 2** Train the network.
+
+  1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
+     
+  - deployment_mode : 0
+  - experiment : 1
+
+  2. Then you can either train a single model by specifying `network.arch` and `dataset.seq_len` to your preference and running
+     ```
+     python3 main.py -config configs/params.yaml
+     ```
+     or you can train all models - LSTM and RNN, each with sequence lengths of 5, 10, 15 ... 60 by setting the config pareter `visualize.sequences` to your preference, setting the config parameter `bash` to 1, and running
+     ```
+     train.sh
+     ```
+**Step 3** Load model results
+
+  1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
+     
+  - deployment_mode : 0
+  - experiment : 2
+
+  2. Load all the results by running
+     ```
+     python3 main.py -config configs/params.yaml
+     ```
+
+**Step 4** Run evaluation
+
+  1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
+     
+  - deployment_mode : 0
+  - experiment : 3
+
+  2. Run the evaluation by running
+     ```
+     python3 main.py -config configs/params.yaml
+     ```
+     This will output loss plots, as well quantitative and qualitative metrics showing model performance. These files will be output into a folder, `/develop/results/meta_atom_rnn/analysis`
