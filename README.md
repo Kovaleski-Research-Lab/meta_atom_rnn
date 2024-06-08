@@ -44,11 +44,11 @@ The PVCs can be found by logging on to any machine with kubernetes installed and
    -v /home/{your_pawprint}/Documents/code:/develop/code \
    -v /home/agkgd4/Documents/data:/develop/data \
    -v /home/{your_pawprint}/Documents/results:/develop/results \
-   -v ~/.kube:/root/.kube kovaleskilab/meep_ml:launcher
+   -v ~/.kube:/root/.kube 
    ```
    
-  - Note: You may prefer a conda environment instead of a docker container for launching Kubernetes jobs. A barebones environment should have jinja2 installed (not necessary to install kubernetes in the conda environment if you used snap install per the Kubernetes link in item 1.
-  - Note: The dataset subset is located on Marge and Kubernetes is already installed.
+  - Note: You may prefer a conda environment instead of a docker container for launching Kubernetes jobs. A barebones environment should have jinja2 installed (not necessary to install kubernetes in the conda environment if you used `snap install` per the Kubernetes link in item 1.
+  - Note: The data subset is located on Marge and Kubernetes is already installed.
 
 ### Running the code
 
@@ -106,7 +106,7 @@ The PVCs can be found by logging on to any machine with kubernetes installed and
      ```
      This will output loss plots, as well quantitative and qualitative metrics showing model performance. These files will be output into a folder, `/develop/results/meta_atom_rnn/analysis`
 
-#### Option 1: Scale up, launch Kubernetes jobs:
+#### Option 2: Scale up, launch Kubernetes jobs:
 
 **Step 1** Preprocessing the data (This assumes you have generated the raw data via [general_3x3](https://github.com/Kovaleski-Research-Lab/general_3x3/tree/andy_branch), and the raw data has been reduced to volumes via [repo here].)
   
@@ -123,38 +123,34 @@ The PVCs can be found by logging on to any machine with kubernetes installed and
 
   1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
      
-  - deployment_mode : 0
+  - deployment_mode : 1
   - experiment : 1
 
-  2. Then you can either train a single model by specifying `network.arch` and `dataset.seq_len` to your preference and running
+  2. Launch the training jobs using
      ```
-     python3 main.py -config configs/params.yaml
-     ```
-     or you can train all models - LSTM and RNN, each with sequence lengths of 5, 10, 15 ... 60 by setting the config pareter `visualize.sequences` to your preference, setting the config parameter `bash` to 1, and running
-     ```
-     train.sh
+     python3 launch_training.py -config ../configs/params.yaml
      ```
 **Step 3** Load model results
 
   1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
      
-  - deployment_mode : 0
+  - deployment_mode : 1
   - experiment : 2
 
   2. Load all the results by running
      ```
-     python3 main.py -config configs/params.yaml
+     python3 load_results.py -config ../configs/params.yaml
      ```
 
 **Step 4** Run evaluation
 
   1. Update the [config file](https://github.com/Kovaleski-Research-Lab/meta_atom_rnn/blob/main/configs/params.yaml):
      
-  - deployment_mode : 0
+  - deployment_mode : 1
   - experiment : 3
 
   2. Run the evaluation by running
      ```
-     python3 main.py -config configs/params.yaml
+     python3 launch_evaluation.py -config configs/params.yaml
      ```
-     This will output loss plots, as well quantitative and qualitative metrics showing model performance. These files will be output into a folder, `/develop/results/meta_atom_rnn/analysis`
+     This will output loss plots, as well quantitative and qualitative metrics showing model performance. These files will be output into the `training-results` pvc.
